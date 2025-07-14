@@ -33,7 +33,7 @@ def parse_task_file(file_path):
             tasks[dep].dependents.append(task.name)
     return tasks
 
-# Validate tasks and compute expected runtime (DAG)
+# Validate tasks and compute expected runtime (DAG + dfs)
 def validate_tasks(tasks):
     visited, stack = set(), set() # Track visited nodes and current dfs path
 
@@ -83,3 +83,20 @@ def run_tasks(tasks, expected_runtime):
     actual_runtime = time.time() - start_time
     print(f"\nExpected runtime: {expected_runtime:.2f}s")
     print(f"Actual runtime: {actual_runtime:.2f}")
+
+# CLI handler
+def main():
+    parser = argparse.ArgumentParser(descriptioni="Task Scheduler CLI")
+    parser.add_argument('file', help="Path to task list file")
+    parser.add_argument('--validate', action='store_true', help="Validate task list and print expected runtime")
+    parser.add_argument('--run', action='store_true', help="Run tasks and compare actual vs expected runtime")
+    args = parser.parse_args()
+    tasks = parse_task_file(args.file)  # Build the task object list from file
+    expected_runtime = validate_tasks(tasks)  # Check DAG & compute max expected runtime
+
+    if args.run:
+        run_tasks(tasks, expected_runtime)
+
+# Entry point
+if __name__ == "__main__":
+    main()

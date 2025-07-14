@@ -26,7 +26,8 @@ def parse_task_file(file_path):
             duration = int(row[1].strip())
             depends = [dep.strip() for dep in row[2].split()] if len(row) >2 else []
             tasks[name] = Task(name, duration, depends)
-    # List dependents for each task
+
+    # List each task's dependents for reverse lookup
     for task in tasks.values():
         for dep in task.dependencies:
             tasks[dep].dependents.append(task.name)
@@ -34,19 +35,51 @@ def parse_task_file(file_path):
 
 # Validate tasks and compute expected runtime (DAG)
 def validate_tasks(tasks):
-    visited, stack = set(), set()
+    visited, stack = set(), set() # Track visited nodes and current dfs path
 
+    # Recursively sum dependency runtimes
     def dfs(task_name):
         if task_name in stack:
+            # Revisiting node in current path -> cycle
             raise ValueError(f"cycle at {task_name}")
         if task_name in visited:
+            # Already validated, skip
             return 0
         stack.add(task_name)
         visited.add(task_name)
-        max_dep_time = max((dfs(dep) for dep in tasks[task_name].dependencies), default=0)
+
+        # Find longest runtime among dependencies
+        max_dep_time = max((dfs(dep) for dep in tasks[task_name].dependencies), default=0) 
         stack.remove(task_name)
-        return max_dep_time + tasks[task_name].duration
+
+        # Add this task duration to longest dependency path
+        return max_dep_time + tasks[task_name].duration 
     
+    # Run dfs on all tasks
     total_runtime = max(dfs(task.name) for task in tasks.values())
-    print(f"Expected total runtime: {total_runtime}s.")
+    print(f"Expected total runtime: {total_runtime:.2f}s.")
     return total_runtime
+
+# Run tasks
+def run_tasks(tasks, expected_runtime):
+    start_time = time.time()
+
+    def run_task(task):
+        # Wait for all dependencies to complete before starting
+        for dep in task.dependencies:
+            tasks[dep].completed.wait()
+        print(f"Starting {task.name} (expected duration: {task.duration}s)")
+        time.sleep(task.duration) # Simulate task by sleeping for expected duration
+        print(f"Completed {task.name}")
+        task.completed.set() # Denotes task completion
+
+    # Use thread pool to run multiple tasks in parallel
+    with ThreadPoolExecutor() as executor:
+        futures = [executor.submit(run_task, task) for task in tasks.values()]
+        for future in as_completed(futures):
+            future.result()
+
+    #Measure actual runtime
+    actual_runtime = time.time() - start_time
+    print(f"\nExpected runtime: {expected_runtime:.2f}s")
+    print(f"Actual runtime: {actual_runtime:.2f}")

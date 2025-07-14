@@ -1,0 +1,7 @@
+taskA, 3
+taskB, 2, taskA
+taskC, 4, taskA
+taskD, 1, taskB taskC
+taskE, 5
+taskF, 2, taskE
+taskG, 3, taskD taskF

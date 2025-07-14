@@ -32,4 +32,21 @@ def parse_task_file(file_path):
             tasks[dep].dependents.append(task.name)
     return tasks
 
+# Validate tasks and compute expected runtime (DAG)
+def validate_tasks(tasks):
+    visited, stack = set(), set()
 
+    def dfs(task_name):
+        if task_name in stack:
+            raise ValueError(f"cycle at {task_name}")
+        if task_name in visited:
+            return 0
+        stack.add(task_name)
+        visited.add(task_name)
+        max_dep_time = max((dfs(dep) for dep in tasks[task_name].dependencies), default=0)
+        stack.remove(task_name)
+        return max_dep_time + tasks[task_name].duration
+    
+    total_runtime = max(dfs(task.name) for task in tasks.values())
+    print(f"Expected total runtime: {total_runtime}s.")
+    return total_runtime

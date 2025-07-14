@@ -86,7 +86,7 @@ def run_tasks(tasks, expected_runtime):
 
 # CLI handler
 def main():
-    parser = argparse.ArgumentParser(descriptioni="Task Scheduler CLI")
+    parser = argparse.ArgumentParser(description="Task Scheduler CLI")
     parser.add_argument('file', help="Path to task list file")
     parser.add_argument('--validate', action='store_true', help="Validate task list and print expected runtime")
     parser.add_argument('--run', action='store_true', help="Run tasks and compare actual vs expected runtime")

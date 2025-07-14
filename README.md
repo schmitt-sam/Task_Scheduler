@@ -29,7 +29,7 @@ Each line in the task list file should follow this format:
 ### Requirements
 
 - Python 3.8+
-- pytest 7.0.0+
+- pytest 7.0.0+ 
 
 ---
 
@@ -62,5 +62,5 @@ pip install -r requirements.txt
 ```
 - Discover/Run tests
 ```
-pytest tests
+python -m pytest tests
 ```

@@ -35,25 +35,35 @@ def parse_task_file(file_path):
 
 # Validate tasks and compute expected runtime (DAG + dfs)
 def validate_tasks(tasks):
-    visited, stack = set(), set() # Track visited nodes and current dfs path
 
-    # Recursively sum dependency runtimes
+    # Track visited nodes and current dfs path
+    visited = set()
+    stack = set()
+    cache = {}
+
+    # dfs to find dependency chains
     def dfs(task_name):
         if task_name in stack:
             # Revisiting node in current path -> cycle
             raise ValueError(f"cycle at {task_name}")
-        if task_name in visited:
+        if task_name in cache:
             # Already validated, skip
-            return 0
+            return cache[task_name]
         stack.add(task_name)
-        visited.add(task_name)
 
         # Find longest runtime among dependencies
-        max_dep_time = max((dfs(dep) for dep in tasks[task_name].dependencies), default=0) 
+        max_dep_time = 0
+        for dep in tasks[task_name].dependencies:
+            dep_time = dfs(dep)
+            max_dep_time = max(max_dep_time, dep_time)
+
         stack.remove(task_name)
 
         # Add this task duration to longest dependency path
-        return max_dep_time + tasks[task_name].duration 
+        total_time = max_dep_time + tasks[task_name].duration
+        cache[task_name] = total_time
+        visited.add(task_name)
+        return total_time 
     
     # Run dfs on all tasks
     total_runtime = max(dfs(task.name) for task in tasks.values())
